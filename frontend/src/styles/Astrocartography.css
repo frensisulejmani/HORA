@@ -1,0 +1,251 @@
+/* Astrocartography Page Styles */
+
+.astrocartography-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+}
+
+.astrocartography-map {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(168, 85, 247, 0.3);
+  background: #1e293b;
+}
+
+/* Leaflet customization */
+.leaflet-container {
+  background: #1e293b;
+  font-family: inherit;
+}
+
+.leaflet-control-attribution {
+  background: rgba(15, 23, 42, 0.8) !important;
+  color: #94a3b8 !important;
+}
+
+.leaflet-control-attribution a {
+  color: #a78bfa !important;
+}
+
+/* Polyline hover effect */
+.leaflet-interactive:hover {
+  cursor: pointer;
+}
+
+/* Legend styling */
+.astrocartography-legend {
+  background: rgba(30, 41, 59, 0.95);
+  border: 2px solid rgba(168, 85, 247, 0.3);
+  border-radius: 12px;
+  padding: 24px;
+  backdrop-filter: blur(10px);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.legend-item:hover {
+  background-color: rgba(168, 85, 247, 0.1);
+}
+
+.legend-color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Modal styling */
+.astrocartography-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+
+.astrocartography-modal-content {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 450px;
+  width: 100%;
+  border: 2px solid rgba(168, 85, 247, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  animation: slideUp 0.3s ease-out;
+  z-index: 10000;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 4px;
+}
+
+.modal-close-btn:hover {
+  color: white;
+}
+
+.modal-description {
+  margin-bottom: 24px;
+}
+
+.modal-description-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #d8b4fe;
+  margin-bottom: 8px;
+}
+
+.modal-description-text {
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.modal-tip {
+  background: rgba(148, 163, 184, 0.1);
+  border-left: 4px solid #a78bfa;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.modal-tip-text {
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+.modal-tip-text strong {
+  color: #d8b4fe;
+}
+
+.modal-close-button {
+  width: 100%;
+  background: linear-gradient(135deg, #a855f7 0%, #d946ef 100%);
+  color: white;
+  font-weight: 600;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 16px;
+}
+
+.modal-close-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(168, 85, 247, 0.4);
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .astrocartography-modal-content {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .astrocartography-legend {
+    padding: 16px;
+  }
+
+  .legend-item {
+    margin-bottom: 10px;
+  }
+
+  .astrocartography-modal-content {
+    padding: 24px;
+  }
+
+  .modal-title {
+    font-size: 20px;
+  }
+
+  .modal-description-title {
+    font-size: 16px;
+  }
+}
+
+/* Animation for loading */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Line type indicators */
+.line-type-solid {
+  width: 24px;
+  height: 2px;
+  background: white;
+}
+
+.line-type-dashed {
+  width: 24px;
+  height: 2px;
+  background: white;
+  background-image: linear-gradient(90deg, white 50%, transparent 50%);
+  background-size: 8px 100%;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+button:active {
+  transform: scale(0.98);
+}

@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom Colors */
+  --color-cosmic-bg: #0d0d0d;
+  --color-cosmic-primary: #a855f7;
+  
+  /* Custom Animations */
+  --animate-twinkle: twinkle 3s infinite ease-in-out;
+  --animate-pulse-slow: pulse-custom 6s infinite alternate;
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes pulse-custom {
+    0% { opacity: 0.3; transform: scale(1); }
+    100% { opacity: 0.6; transform: scale(1.1); }
+  }
+}
+
+@layer base {
+  body {
+    margin: 0;
+    background-color: var(--color-cosmic-bg);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+html, body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar, 
+body::-webkit-scrollbar {
+  display: none;
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
