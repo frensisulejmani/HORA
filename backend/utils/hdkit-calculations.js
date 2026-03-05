@@ -1,6 +1,3 @@
-// HD Calculations using proper I Ching gate system
-// Based on hdkit methodology
-
 const gateOrder = [41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3, 27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56, 31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50, 28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60];
 
 const harmonicOrder = [8, 14, 60, 63, 15, 59, 31, 1, 52, 20, 56, 22, 33, 2, 5, 48, 62, 58, 49, 10, 45, 12, 43, 61, 51, 44, 50, 38, 46, 41, 7, 54, 13, 7, 4, 63, 40, 28, 55, 37, 64, 59, 23, 43, 21, 35, 29, 16, 19, 27, 25, 9, 42, 32, 39, 11, 57, 18, 6, 3, 60, 24, 17, 47];
@@ -11,7 +8,7 @@ const channels = {
   '2-14': ['Ajna', 'Throat'],
   '3-60': ['Ajna', 'G'],
   '4-63': ['Root', 'Spleen'],
-  '5-15': ['G', 'Solar Plexus'],
+  '5-15': ['G', 'SolarPlexus'],
   '6-59': ['Spleen', 'Sacral'],
   '7-31': ['Throat', 'G'],
   '9-52': ['Root', 'Spleen'],
@@ -19,7 +16,7 @@ const channels = {
   '10-34': ['G', 'Sacral'],
   '10-57': ['G', 'Sacral'],
   '11-56': ['Throat', 'Spleen'],
-  '12-22': ['Solar Plexus', 'Throat'],
+  '12-22': ['SolarPlexus', 'Throat'],
   '13-33': ['Ajna', 'Throat'],
   '16-48': ['Ego', 'Throat'],
   '17-62': ['Ajna', 'Throat'],
@@ -29,24 +26,24 @@ const channels = {
   '20-57': ['G', 'Sacral'],
   '21-45': ['Ego', 'Throat'],
   '23-43': ['Ajna', 'Throat'],
-  '24-61': ['Root', 'Solar Plexus'],
+  '24-61': ['Root', 'SolarPlexus'],
   '25-51': ['Ego', 'G'],
-  '26-44': ['Ajna', 'Solar Plexus'],
-  '27-50': ['Spleen', 'Solar Plexus'],
-  '28-38': ['Root', 'Solar Plexus'],
+  '26-44': ['Ajna', 'SolarPlexus'],
+  '27-50': ['Spleen', 'SolarPlexus'],
+  '28-38': ['Root', 'SolarPlexus'],
   '29-46': ['Spleen', 'G'],
-  '30-41': ['Solar Plexus', 'Sacral'],
+  '30-41': ['SolarPlexus', 'Sacral'],
   '32-54': ['Spleen', 'Root'],
   '34-57': ['G', 'Sacral'],
-  '35-36': ['Solar Plexus', 'Solar Plexus'],
+  '35-36': ['SolarPlexus', 'SolarPlexus'],
   '37-40': ['Throat', 'G'],
-  '39-55': ['Solar Plexus', 'Sacral'],
-  '42-53': ['Root', 'Solar Plexus'],
+  '39-55': ['SolarPlexus', 'Sacral'],
+  '42-53': ['Root', 'SolarPlexus'],
   '47-64': ['Head', 'Ajna']
 };
 
 // Energy centers in HD
-const centers = ['Head', 'Ajna', 'Throat', 'G', 'Ego', 'Solar Plexus', 'Spleen', 'Sacral', 'Root'];
+const centers = ['Head', 'Ajna', 'Throat', 'G', 'Ego', 'SolarPlexus', 'Spleen', 'Sacral', 'Root'];
 
 // Planetary order for HD calculations
 const planets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'NorthNode', 'SouthNode', 'Earth', 'Chiron'];
@@ -314,6 +311,83 @@ function getActivatedChannels(personalityActivations, designActivations) {
   return activatedChannels;
 }
 
+// Map planetary activations to centers
+function getGatesInCenters(personalityActivations, designActivations) {
+  const centerGates = {
+    Head: [],
+    Ajna: [],
+    Throat: [],
+    G: [],
+    Ego: [],
+    SolarPlexus: [],
+    Spleen: [],
+    Sacral: [],
+    Root: []
+  };
+
+  // Build gate to center mapping from channels
+  const gateToCenter = {};
+  Object.entries(channels).forEach(([channelKey, [center1, center2]]) => {
+    const [gate1, gate2] = channelKey.split('-').map(Number);
+    if (!gateToCenter[gate1]) gateToCenter[gate1] = [];
+    if (!gateToCenter[gate2]) gateToCenter[gate2] = [];
+    // assume gate1 belongs to center1, gate2 belongs to center2
+    gateToCenter[gate1].push(center1);
+    gateToCenter[gate2].push(center2);
+  });
+
+  // Add planetary gates to appropriate centers
+  const allActivations = { ...personalityActivations, ...designActivations };
+  Object.entries(allActivations).forEach(([planet, activation]) => {
+    if (activation.gate) {
+      const gate = activation.gate;
+      const centersList = gateToCenter[gate] || [];
+      centersList.forEach(center => {
+        if (centerGates[center]) {
+          centerGates[center].push({
+            gate: activation.gate,
+            line: activation.line,
+            planet
+          });
+        }
+      });
+    }
+  });
+
+  return centerGates;
+}
+
+// Return full static list of gates associated with each center
+function getAllGatesByCenter() {
+  const allGates = {
+    Head: [],
+    Ajna: [],
+    Throat: [],
+    G: [],
+    Ego: [],
+    SolarPlexus: [],
+    Spleen: [],
+    Sacral: [],
+    Root: []
+  };
+
+  Object.entries(channels).forEach(([channelKey, [center1, center2]]) => {
+    const [gate1, gate2] = channelKey.split('-').map(Number);
+     console.log(" ", allGates[center1], allGates[center2]);
+   
+    // gate1 belongs to center1, gate2 belongs to center2
+    if (!allGates[center1].includes(gate1)) allGates[center1].push(gate1);
+    if (!allGates[center2].includes(gate2)) allGates[center2].push(gate2);
+  });
+
+  // sort each array numerically
+  Object.keys(allGates).forEach(center => {
+    allGates[center].sort((a,b)=>a-b);
+  });
+
+  return allGates;
+}
+
 module.exports = {
   gateOrder,
   harmonicOrder,
@@ -333,5 +407,7 @@ module.exports = {
   baseFromLongitude,
   getPlanetaryActivations,
   getDefinedCenters,
-  getActivatedChannels
+  getActivatedChannels,
+  getGatesInCenters,
+  getAllGatesByCenter
 };

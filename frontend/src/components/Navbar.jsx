@@ -16,7 +16,7 @@ const Navbar = () => {
           <span className="text-2xl font-semibold tracking-wider">Hora</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-10">
+        <div className="hidden md:flex items-center gap-10 font-bold">
           {['Home', 'Zodiac', 'Hora AI', 'Games', 'About'].map((item) => (
             <Link 
               key={item} 

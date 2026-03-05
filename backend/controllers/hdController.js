@@ -3,6 +3,8 @@ const {
   getPlanetaryActivations,
   getDefinedCenters,
   getActivatedChannels,
+  getGatesInCenters,
+  getAllGatesByCenter,
   gateOrder,
   harmonicGate
 } = require('../utils/hdkit-calculations');
@@ -37,12 +39,86 @@ function normalizeBirth({ birthDateISO, year, month, date, hour, minute, latitud
 }
 
 async function computeHumanDesign(req, res) {
+  console.log('computeHumanDesign called with body:', req.body);
   try {
-    const { birthDateISO, year, month, date, hour, minute, latitude, longitude, timezone, place } = req.body;
+    // If the user is authenticated and has birth data stored, use that as defaults
+    let {
+      birthDateISO,
+      year,
+      month,
+      date,
+      hour,
+      minute,
+      latitude,
+      longitude,
+      timezone,
+      place
+    } = req.body || {};
+
+    // debug
+    console.log('computeHumanDesign called. body:', { birthDateISO, year, month, date, hour, minute, latitude, longitude, timezone, place });
+    if (req.user && req.user.birth) console.log('user birth stored:', req.user.birth);
+
+    if (req.user && req.user.birth) {
+      const b = req.user.birth;
+      // compute ISO if not provided
+      if (!birthDateISO && b.year && b.month && b.date) {
+        birthDateISO = new Date(Date.UTC(b.year, (b.month || 1) - 1, b.date || 1, b.hour || 0, b.minute || 0)).toISOString();
+      }
+      // Only override individual fields if missing
+      year = year || b.year;
+      month = month || b.month;
+      date = date || b.date;
+      hour = hour || b.hour;
+      minute = minute || b.minute;
+      latitude = latitude || b.latitude;
+      longitude = longitude || b.longitude;
+      timezone = timezone || b.timezone;
+      place = place || b.place;
+    }
+
+    // validate values exist now
+    if (!(birthDateISO || (year && month && date))) {
+      // no birth info supplied – send base map containing all gate numbers
+      // note: even if user is authenticated and missing birth data, we still return
+      // a blueprint rather than an error so the frontend always has something to render.
+      if (req.user && (!year || !month || !date)) {
+        console.log('User authenticated but no birth data; returning static blueprint.');
+      }
+      const allGatesByCenter = getAllGatesByCenter();
+      const definedCenters = Object.fromEntries(
+        Object.keys(allGatesByCenter).map(c => [c, true])
+      );
+      return res.json({
+        message: 'OK',
+        birth: null,
+        isoUTC: null,
+        designISO: null,
+        personality: {},
+        design: {},
+        definedCenters,
+        activatedChannels: [],
+        gatesInCenters: allGatesByCenter,
+        allGatesByCenter,
+        type: null,
+        typeDescription: null,
+        authority: null,
+        authorityDescription: null,
+        profile: null,
+        profileDescription: null
+      });
+    }
+
     const norm = normalizeBirth({ birthDateISO, year, month, date, hour, minute, latitude, longitude, timezone, place });
 
     const birthISO = norm.isoUTC;
     const birth = norm.birth;
+    // ensure minimal defaults for API
+    birth.hour = birth.hour || 0;
+    birth.minute = birth.minute || 0;
+    birth.latitude = birth.latitude || 0;
+    birth.longitude = birth.longitude || 0;
+    birth.timezone = typeof birth.timezone === 'number' ? birth.timezone : 0;
 
     // Design date ≈ 88 days before birth (approximation of 88° solar arc)
     const designDate = new Date(birthISO);
@@ -51,28 +127,56 @@ async function computeHumanDesign(req, res) {
 
     // Use getNatalBasics instead of getComprehensiveNatal for faster response
     // Human Design doesn't need all the comprehensive data
-    const [personality, design] = await Promise.all([
-      getNatalBasics({
-        year: birth.year,
-        month: birth.month,
-        date: birth.date,
-        hour: birth.hour,
-        minute: birth.minute,
-        latitude: birth.latitude,
-        longitude: birth.longitude,
-        timezone: birth.timezone
-      }),
-      getNatalBasics({
-        year: designParts.year,
-        month: designParts.month,
-        date: designParts.date,
-        hour: designParts.hour,
-        minute: designParts.minute,
-        latitude: birth.latitude,
-        longitude: birth.longitude,
-        timezone: birth.timezone
-      })
-    ]);
+    let personality, design;
+    try {
+      [personality, design] = await Promise.all([
+        getNatalBasics({
+          year: birth.year,
+          month: birth.month,
+          date: birth.date,
+          hour: birth.hour,
+          minute: birth.minute,
+          latitude: birth.latitude,
+          longitude: birth.longitude,
+          timezone: birth.timezone
+        }),
+        getNatalBasics({
+          year: designParts.year,
+          month: designParts.month,
+          date: designParts.date,
+          hour: designParts.hour,
+          minute: designParts.minute,
+          latitude: birth.latitude,
+          longitude: birth.longitude,
+          timezone: birth.timezone
+        })
+      ]);
+    } catch (apiErr) {
+      console.error('Natal API error, falling back to static blueprint:', apiErr);
+      const allGatesByCenter = getAllGatesByCenter();
+      const definedCenters = Object.fromEntries(
+        Object.keys(allGatesByCenter).map(c => [c, true])
+      );
+      return res.json({
+        message: 'OK',
+        birth,
+        isoUTC: birthISO,
+        designISO: designDate.toISOString(),
+        personality: {},
+        design: {},
+        definedCenters,
+        activatedChannels: [],
+        gatesInCenters: allGatesByCenter,
+        allGatesByCenter,
+        type: null,
+        typeDescription: null,
+        authority: null,
+        authorityDescription: null,
+        profile: null,
+        profileDescription: null,
+        error: apiErr.message
+      });
+    }
 
     // Calculate proper planetary activations using hdkit
     const personalityActivations = getPlanetaryActivations(personality);
@@ -81,6 +185,8 @@ async function computeHumanDesign(req, res) {
     // Determine defined centers from channel activations
     const definedCenters = getDefinedCenters(personalityActivations, designActivations);
     const activatedChannels = getActivatedChannels(personalityActivations, designActivations);
+    const gatesInCenters = getGatesInCenters(personalityActivations, designActivations);
+    const allGatesByCenter = getAllGatesByCenter();
 
     // Extract Human Design information
     const hdType = determineHDType(personalityActivations, designActivations, definedCenters);
@@ -96,6 +202,8 @@ async function computeHumanDesign(req, res) {
       design: designActivations,
       definedCenters,
       activatedChannels,
+      gatesInCenters,
+      allGatesByCenter,
       type: hdType,
       typeDescription: getHDTypeDescription(hdType),
       authority: hdAuthority,
@@ -104,8 +212,31 @@ async function computeHumanDesign(req, res) {
       profileDescription: getHDProfileDescription(hdProfile)
     });
   } catch (err) {
-    console.error('computeHumanDesign error:', err.message);
-    return res.status(500).json({ message: 'Human Design error', error: err.message });
+    console.error('computeHumanDesign error:', err);
+    // return static blueprint instead of error
+    const allGatesByCenter = getAllGatesByCenter();
+    const definedCenters = Object.fromEntries(
+      Object.keys(allGatesByCenter).map(c => [c, true])
+    );
+    return res.json({
+      message: 'OK',
+      birth: null,
+      isoUTC: null,
+      designISO: null,
+      personality: {},
+      design: {},
+      definedCenters,
+      activatedChannels: [],
+      gatesInCenters: allGatesByCenter,
+      allGatesByCenter,
+      type: null,
+      typeDescription: null,
+      authority: null,
+      authorityDescription: null,
+      profile: null,
+      profileDescription: null,
+      error: err.message
+    });
   }
 }
 

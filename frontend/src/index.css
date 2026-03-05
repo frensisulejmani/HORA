@@ -27,8 +27,43 @@
     color: white;
     font-family: 'Poppins', sans-serif;
   }
+
+    input[type="date"]::-webkit-datetime-edit-month-field,
+    input[type="date"]::-webkit-datetime-edit-day-field,
+    input[type="date"]::-webkit-datetime-edit-year-field,
+    input[type="date"]::-webkit-datetime-edit-text {
+      color: rgba(255, 255, 255, 0.3) !important;
+    }
+
+    input[type="date"]:focus::-webkit-datetime-edit-month-field,
+    input[type="date"]:focus::-webkit-datetime-edit-day-field,
+    input[type="date"]:focus::-webkit-datetime-edit-year-field,
+    input[type="date"]:focus::-webkit-datetime-edit-text,
+    input[type="date"]:valid::-webkit-datetime-edit-month-field,
+    input[type="date"]:valid::-webkit-datetime-edit-day-field,
+    input[type="date"]:valid::-webkit-datetime-edit-year-field,
+    input[type="date"]:valid::-webkit-datetime-edit-text {
+      color: #fff !important;
+  }
+
+  input::-webkit-datetime-edit-fields-wrapper {
+    background: transparent !important;
+  }
+
+  input::-webkit-datetime-edit-month-field:focus,
+  input::-webkit-datetime-edit-day-field:focus,
+  input::-webkit-datetime-edit-year-field:focus {
+    background-color: transparent !important;
+    color: white !important;
+    outline: none !important;
+  }
+
+  input::selection {
+    background: transparent !important;
+  }
 }
 
+/* --- Global Scrollbar Hide --- */
 html, body {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -48,9 +83,5 @@ body::-webkit-scrollbar {
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
-  }
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
   }
 }

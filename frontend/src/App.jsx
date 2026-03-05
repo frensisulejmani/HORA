@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import ScrollToTop from "./components/ScrollToTop";
 
 // Import your pages
 import Welcome from './pages/Welcome';
@@ -27,13 +28,24 @@ import SoulElementQuiz from './pages/SoulElementQuiz';
 import PastLifeCareerQuiz from './pages/PastLifeCareerQuiz';
 import Horoscope from './pages/Horoscope';
 import About from './pages/About';
+import MC from './pages/MC';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+
+import Saturn from './pages/Saturn';
+import Neptune from './pages/Neptune';
+import Uranus from './pages/Uranus';
+import Mercury from './pages/Mercury';
+import Venus from './pages/Venus';
+import Mars from './pages/Mars';
+import Jupiter from './pages/Jupiter';
+import Pluto from './pages/Pluto';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <div className="scrollbar-hide overflow-y-auto">
+          <ScrollToTop />
           <Routes>
         <Route path="/" element={<Welcome />} />
         <Route path="/login" element={<Login />} />
@@ -50,6 +62,9 @@ function App() {
         <Route path="/destinymatrix" element={<DestinyMatrix />} />
         <Route path="/moon" element={<Moon />} />
         <Route path="/ascendant" element={<Ascendant />} />
+        <Route path="/ascendant/:signName" element={<Ascendant />} />
+        <Route path="/mc" element={<MC />} />
+        <Route path="/mc/:signName" element={<MC />} />
         <Route path="/natal" element={<Natal />} />
         <Route path="/astrocartography" element={<Astrocartography />} />
         <Route path="/games" element={<Games />} />
@@ -61,7 +76,26 @@ function App() {
         <Route path="/horoscope" element={<Horoscope />} />
         <Route path="/about" element={<About />} />
         <Route path="/sun/:signName" element={<Sun />} />
+        <Route path="/moon/:signName" element={<Moon />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
+        <Route path="/venus" element={<Venus />} />
+        <Route path="/venus/:signName" element={<Venus />} />
+        <Route path="/mars" element={<Mars />} />
+        <Route path="/mars/:signName" element={<Mars />} />
+        <Route path="/jupiter" element={<Jupiter />} />
+        <Route path="/jupiter/:signName" element={<Jupiter />} />
+        <Route path="/saturn" element={<Saturn />} />
+        <Route path="/saturn/:signName" element={<Saturn />} />
+        <Route path="/neptune" element={<Neptune />} />
+        <Route path="/neptune/:signName" element={<Neptune />} />
+        <Route path="/uranus" element={<Uranus />} />
+        <Route path="/uranus/:signName" element={<Uranus />} />
+        <Route path="/pluto" element={<Pluto />} />
+        <Route path="/pluto/:signName" element={<Pluto />} />
+        <Route path="/mercury" element={<Mercury />} />
+        <Route path="/mercury/:signName" element={<Mercury />} />
+
       </Routes>
 
         </div>

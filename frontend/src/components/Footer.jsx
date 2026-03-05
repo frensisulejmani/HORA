@@ -11,8 +11,8 @@ const Footer = () => {
       'Horoscope Forecast': '/horoscope',
       'Natal Chart': '/natal',
       'Games': '/games',
-      'AI Chatbot': '/aichatbot',
       'About': '/about',
+      'Soulmate Compatibility': '/soulmate',
       'Privacy Policy': '/privacypolicy',
     };
     return paths[name] || `/${name.toLowerCase().replace(/\s+/g, '')}`;
@@ -42,7 +42,7 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
-              {idx === 1 && ['Home', 'Zodiac Signs', 'Games', 'AI Chatbot'].map(l => (
+              {idx === 1 && ['Home', 'Zodiac Signs', 'Games', 'Soulmate Compatibility'].map(l => (
                 <li key={l}>
                   <Link to={getPath(l)} className="hover:text-purple-500 transition-colors block">
                     {l}

@@ -8,6 +8,7 @@ import about from "../assets/horoscope.jpg";
 import { Heart, MapPin, Layers, Sparkles } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { astroAPI } from "../services/api";
+import Hd from "../assets/HD.png";
 
 const Home = () => {
   const canvasRef = useRef(null);
@@ -254,7 +255,7 @@ const Home = () => {
         <h1 className="text-5xl md:text-6xl font-black tracking-widest leading-tight bg-linear-to-b from-white to-purple-500 bg-clip-text text-transparent uppercase">
           Welcome To Hora!
         </h1>
-        <h2 className="text-3xl font-light mt-2 opacity-100 bg-linear-to-b from-gray-950 to-white bg-clip-text text-transparent ">User Name</h2>
+        <h2 className="text-3xl font-bold mt-2 opacity-100 white uppercase">{user?.name || user?.displayName || (user?.email ? user.email.split('@')[0] : 'User Name')}</h2>
         <p className="max-w-xl text-center mt-4 opacity-70 leading-relaxed text-lg mb-12">
           Your cosmic journey begins here.
         </p>
@@ -284,70 +285,59 @@ const Home = () => {
 
         {/* Daily Horoscope Section */}
         {sunSign !== "Sun Sign" && (
-          <div className="w-full max-w-5xl mb-20">
-            <div className="bg-linear-to-br from-purple-500/20 to-pink-500/10 backdrop-blur-xl border border-purple-500/40 rounded-[30px] p-10 md:p-14">
+          <div className="  mb-10">
+            <div className="bg-linear-to-br w-300 from-purple-500/20 to-pink-500/10 backdrop-blur-xl border border-purple-500/40 rounded-[30px] md:p-14">
               <div className="flex items-center gap-3 mb-8">
                 <Sparkles className="text-purple-400 animate-pulse" size={28} />
-                <h3 className="text-3xl md:text-4xl font-bold text-white">
+                <h3 className="text-3xl md:text-4xl font-bold text-white uppercase">
                   Today's Cosmic Energy
                 </h3>
               </div>
 
               {horoscopeData[sunSign.toLowerCase()] ? (
                 <div className="space-y-6">
-                  <div className="mb-8 pb-8 border-b border-white/10">
-                    <p className="text-xl leading-relaxed text-white/90 font-light">
-                      {horoscopeData[sunSign.toLowerCase()].Daily.overall}
-                    </p>
-                  </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
                     {/* Love */}
                     <div className="p-6 rounded-2xl bg-linear-to-br from-pink-500/15 to-red-500/5 border border-pink-500/20">
-                      <h4 className="text-lg font-semibold text-pink-400 mb-3">
-                        💚 Love & Romance
+                      <h4 className="text-xl font-semibold text-pink-400 mb-3 uppercase">
+                      Love & Romance
                       </h4>
-                      <p className="text-white/80 leading-relaxed">
+                      <p className="text-white/80 leading-relaxed text-l">
                         {horoscopeData[sunSign.toLowerCase()].Daily.love}
                       </p>
                     </div>
 
                     {/* Career */}
                     <div className="p-6 rounded-2xl bg-linear-to-br from-blue-500/15 to-purple-500/5 border border-blue-500/20">
-                      <h4 className="text-lg font-semibold text-blue-400 mb-3">
-                        💼 Career & Work
+                      <h4 className="text-lg font-semibold text-blue-400 mb-3 uppercase">
+                      Career & Work
                       </h4>
-                      <p className="text-white/80 leading-relaxed">
+                      <p className="text-white/80 leading-relaxed text-l">
                         {horoscopeData[sunSign.toLowerCase()].Daily.career}
                       </p>
                     </div>
 
                     {/* Finance */}
                     <div className="p-6 rounded-2xl bg-linear-to-br from-green-500/15 to-emerald-500/5 border border-green-500/20">
-                      <h4 className="text-lg font-semibold text-green-400 mb-3">
-                        💰 Finances & Luck
+                      <h4 className="text-lg font-semibold text-green-400 mb-3 uppercase">
+                      Finances & Luck
                       </h4>
-                      <p className="text-white/80 leading-relaxed">
+                      <p className="text-white/80 leading-relaxed text-l">
                         {horoscopeData[sunSign.toLowerCase()].Daily.finance}
                       </p>
                     </div>
 
                     {/* Sign Info */}
                     <div className="p-6 rounded-2xl bg-linear-to-br from-yellow-500/15 to-orange-500/5 border border-yellow-500/20">
-                      <h4 className="text-lg font-semibold text-yellow-400 mb-3">
-                        ✨ Your Cosmic Profile
+                      <h4 className="text-lg font-semibold text-yellow-400 mb-3 uppercase">
+                      Your Cosmic Profile
                       </h4>
-                      <p className="text-white/80 leading-relaxed">
+                      <p className="text-white/80 leading-relaxed text-l">
                         <span className="font-semibold">Element:</span> {horoscopeData[sunSign.toLowerCase()].element} • <span className="font-semibold">Ruler:</span> {horoscopeData[sunSign.toLowerCase()].ruling}
                       </p>
                     </div>
                   </div>
-
-                  <Link to="/horoscope" className="no-underline inline-block mt-6">
-                    <button className="px-8 py-3 bg-linear-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 text-white rounded-full font-semibold transition-all duration-300 hover:shadow-[0_0_20px_rgba(236,72,153,0.4)]">
-                      View Full Horoscope
-                    </button>
-                  </Link>
                 </div>
               ) : (
                 <p className="text-white/60 text-center py-8">
@@ -408,7 +398,7 @@ const Home = () => {
               <HorizontalBtn
                 title="Human Design Analysis"
                 desc="A sophisticated deep dive into your inner energetic blueprint and decision-making authority."
-                img="https://cdn.britannica.com/68/145968-120-A9A11AA4/Vitruvian-Man-Leonardo-da-Vinci-Gallerie-dellAccademia.jpg"
+                img={Hd}
               />
             </Link>
             

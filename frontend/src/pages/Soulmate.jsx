@@ -327,12 +327,12 @@ const Soulmate = () => {
             {/* Detailed Analysis */}
             <div className="grid md:grid-cols-2 gap-6">
               {/* Strong Points */}
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 backdrop-blur-md">
-                <h3 className="text-2xl font-bold text-green-400 mb-4">💚 Strong Points</h3>
+              <div className="p-6 rounded-2xl bg-linear-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 backdrop-blur-md">
+                <h3 className="text-2xl font-bold text-green-400 mb-4 uppercase">Strong Points</h3>
                 <ul className="space-y-3">
                   {compatibilityDetails.strongPoints.map((point, idx) => (
-                    <li key={idx} className="text-white/80 flex items-start gap-3">
-                      <span className="text-green-400 mt-1">✓</span>
+                    <li key={idx} className="text-white/80 items-start gap-3">
+                      <span className="text-green-400 mt-1 ">◦  </span>
                       <span>{point}</span>
                     </li>
                   ))}
@@ -340,12 +340,12 @@ const Soulmate = () => {
               </div>
 
               {/* Weak Points */}
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20 backdrop-blur-md">
-                <h3 className="text-2xl font-bold text-orange-400 mb-4">⚠️ Areas to Work On</h3>
+              <div className="p-6 rounded-2xl bg-linear-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20 backdrop-blur-md">
+                <h3 className="text-2xl font-bold text-orange-400 mb-4 uppercase">Areas to Work On</h3>
                 <ul className="space-y-3">
                   {compatibilityDetails.weakPoints.map((point, idx) => (
-                    <li key={idx} className="text-white/80 flex items-start gap-3">
-                      <span className="text-orange-400 mt-1">•</span>
+                    <li key={idx} className="text-white/80 items-start gap-3">
+                      <span className="text-orange-400 mt-1">•   </span>
                       <span>{point}</span>
                     </li>
                   ))}
@@ -356,7 +356,7 @@ const Soulmate = () => {
             {/* Sign Details */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="p-6 rounded-2xl bg-white/5 border border-purple-500/20 backdrop-blur-md">
-                <h3 className="text-xl font-bold text-purple-400 mb-4">{person1.name}'s Sign: {person1.sign.charAt(0).toUpperCase() + person1.sign.slice(1)}</h3>
+                <h3 className="text-xl font-bold text-purple-400 mb-4 uppercase">{person1.name}'s Sign: {person1.sign.charAt(0).toUpperCase() + person1.sign.slice(1)}</h3>
                 <div className="space-y-2 text-white/80">
                   <p><span className="text-purple-300 font-semibold">Element:</span> {compatibilityDetails.sign1Details.element}</p>
                   <p><span className="text-purple-300 font-semibold">Quality:</span> {compatibilityDetails.sign1Details.quality}</p>
@@ -365,7 +365,7 @@ const Soulmate = () => {
               </div>
 
               <div className="p-6 rounded-2xl bg-white/5 border border-pink-500/20 backdrop-blur-md">
-                <h3 className="text-xl font-bold text-pink-400 mb-4">{person2.name}'s Sign: {person2.sign.charAt(0).toUpperCase() + person2.sign.slice(1)}</h3>
+                <h3 className="text-xl font-bold text-pink-400 mb-4 uppercase">{person2.name}'s Sign: {person2.sign.charAt(0).toUpperCase() + person2.sign.slice(1)}</h3>
                 <div className="space-y-2 text-white/80">
                   <p><span className="text-pink-300 font-semibold">Element:</span> {compatibilityDetails.sign2Details.element}</p>
                   <p><span className="text-pink-300 font-semibold">Quality:</span> {compatibilityDetails.sign2Details.quality}</p>
@@ -413,7 +413,7 @@ const CompatibilityCard = ({ label, color, personId }) => (
         <input 
           id={`date${personId}`}
           type="date" 
-          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 focus:outline-none focus:border-purple-500 invert-[0.8] brightness-200"
+          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 focus:outline-none focus:border-purple-500 transition-colors text-white placeholder:text-white/30 selection:bg-transparent"
         />
       </div>
     </div>
