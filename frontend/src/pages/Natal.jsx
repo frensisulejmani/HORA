@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   Sun, Moon, Zap, Heart, Swords, Sparkles, Shield, 
-  Radio, Droplets, Skull, ArrowUpRight, Crown, Compass, MoonStar, MapPin 
+  Radio, Droplets, Skull, ArrowUpRight, Crown, MapPin,
+  Star, Circle
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -21,21 +22,24 @@ const Natal = () => {
   const [loading, setLoading] = useState(true);
 
   const planetIcons = {
-    Sun: <Sun size={16} />,
-    Moon: <Moon size={16} />,
-    Mercury: <Zap size={16} />,
-    Venus: <Heart size={16} />,
-    Mars: <Swords size={16} />,
-    Jupiter: <Sparkles size={16} />,
-    Saturn: <Shield size={16} />,
-    Uranus: <Radio size={16} />,
-    Neptune: <Droplets size={16} />,
-    Pluto: <Skull size={16} />
+    Sun:      <Sun size={16} />,
+    Moon:     <Moon size={16} />,
+    Mercury:  <Zap size={16} />,
+    Venus:    <Heart size={16} />,
+    Mars:     <Swords size={16} />,
+    Jupiter:  <Sparkles size={16} />,
+    Saturn:   <Shield size={16} />,
+    Uranus:   <Radio size={16} />,
+    Neptune:  <Droplets size={16} />,
+    Pluto:    <Skull size={16} />,
+    Chiron:   <Circle size={16} />,
+    NorthNode:<ArrowUpRight size={16} />,
+    Lilith:   <Star size={16} />,
   };
 
   const elementMap = {
-    Aries: 'Fire', Taurus: 'Earth', Gemini: 'Air', Cancer: 'Water',
-    Leo: 'Fire', Virgo: 'Earth', Libra: 'Air', Scorpio: 'Water',
+    Aries: 'Fire',   Taurus: 'Earth',  Gemini: 'Air',   Cancer: 'Water',
+    Leo: 'Fire',     Virgo: 'Earth',   Libra: 'Air',    Scorpio: 'Water',
     Sagittarius: 'Fire', Capricorn: 'Earth', Aquarius: 'Air', Pisces: 'Water'
   };
 
@@ -44,12 +48,11 @@ const Natal = () => {
     'Union', 'Legacy', 'Expansion', 'Status', 'Community', 'Karma'
   ];
 
-  const getSignFromLongitude = (longitude) => {
-    const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
-                  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
-    const signIndex = Math.floor((longitude % 360) / 30);
-    return signs[signIndex % 12] || 'Unknown';
-  };
+  const PLANET_ORDER = [
+    'Sun','Moon','Mercury','Venus','Mars',
+    'Jupiter','Saturn','Uranus','Neptune','Pluto',
+    'Chiron','NorthNode','Lilith'
+  ];
 
   useEffect(() => {
     const fetchNatalChart = async () => {
@@ -60,76 +63,127 @@ const Natal = () => {
 
       try {
         setLoading(true);
+
+        // Get IANA timezone from browser — needed by the RapidAPI backend.
+        // Falls back to whatever is stored on the user profile.
+        const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const timezone = user.birth.timezone && String(user.birth.timezone).includes('/')
+          ? user.birth.timezone
+          : browserTimezone;
+
         const response = await astroAPI.getNatal({
-          date: user.birth.date,
-          month: user.birth.month,
-          year: user.birth.year,
-          hour: user.birth.hour || 0,
-          minute: user.birth.minute || 0,
-          latitude: user.birth.latitude || 0,
+          date:      user.birth.date,
+          month:     user.birth.month,
+          year:      user.birth.year,
+          hour:      user.birth.hour   || 0,
+          minute:    user.birth.minute || 0,
+          latitude:  user.birth.latitude  || 0,
           longitude: user.birth.longitude || 0,
-          timezone: user.birth.timezone || 0
+          timezone,
         });
 
+        // Backend now returns: { message, data: { planets, houses, ascendant, source } }
         const data = response.data?.data;
-        const rawData = data?.rawData;
+        if (!data) throw new Error('No data returned from server');
 
-        const planetsData = data?.planets || rawData?.planets || [];
-        if (Array.isArray(planetsData) && planetsData.length > 0) {
-          const processedPlanets = planetsData.map(p => {
-            const degree = p.full_degree || p.degree || p.longitude || 0;
-            const sign = p.sign || getSignFromLongitude(degree);
-            const deg = Math.floor(degree % 30);
-            const min = Math.floor((degree % 1) * 60);
-            const planetName = p.name || p.body || 'Unknown';
+        // ── Planets ──────────────────────────────────────────────────────────
+        const rawPlanets = data.planets ?? [];
+        const processedPlanets = rawPlanets
+          .filter(p => p?.name)
+          .map(p => {
+            const deg     = p.full_degree ?? p.degree ?? 0;
+            const sign    = p.sign || 'Unknown';
+            const wholeDeg = Math.floor(deg % 30);
+            const minutes  = Math.floor((deg % 1) * 60);
             return {
-              name: planetName,
-              sign: sign,
-              full_degree: degree,
-              deg: `${deg}° ${min}'`,
-              icon: planetIcons[planetName] || <Sparkles size={16} />,
-              el: elementMap[sign] || 'Unknown'
+              name:        p.name,
+              sign,
+              full_degree: deg,
+              deg:         `${wholeDeg}° ${String(minutes).padStart(2,'0')}'`,
+              icon:        planetIcons[p.name] ?? <Sparkles size={16} />,
+              el:          elementMap[sign] ?? 'Unknown',
             };
+          })
+          .sort((a, b) => PLANET_ORDER.indexOf(a.name) - PLANET_ORDER.indexOf(b.name));
+
+        setPlanets(processedPlanets);
+
+        // ── Houses ───────────────────────────────────────────────────────────
+        // RapidAPI only returns Ascendant + MC in houses[].
+        // Local fallback returns all 12. Handle both.
+        const rawHouses = data.houses ?? [];
+        let processedHouses = [];
+
+        if (rawHouses.length >= 12) {
+          // Full 12-house data (local VSOP87 fallback)
+          processedHouses = rawHouses.slice(0, 12).map((h, idx) => ({
+            id:        h.id ?? idx + 1,
+            sign:      h.sign   ?? 'Unknown',
+            area:      houseAreas[idx] ?? 'Unknown',
+            longitude: h.longitude ?? 0,
+          }));
+        } else {
+          // RapidAPI only gave us Ascendant + MC — build placeholder houses
+          // using ascendant as H1 and distributing evenly (equal house approximation)
+          const ascLng = data.ascendant?.longitude ?? 0;
+          processedHouses = Array.from({ length: 12 }, (_, i) => {
+            const lng = (ascLng + i * 30) % 360;
+            const sign = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                          'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'][Math.floor(lng / 30) % 12];
+            return { id: i + 1, sign, area: houseAreas[i], longitude: lng };
           });
 
-          const planetOrder = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
-          processedPlanets.sort((a, b) => planetOrder.indexOf(a.name) - planetOrder.indexOf(b.name));
-          setPlanets(processedPlanets);
-        }
-
-        let processedHouses = [];
-        const housesData = rawData?.houses || data?.houses || [];
-        if (Array.isArray(housesData) && housesData.length > 0) {
-          processedHouses = housesData.slice(0, 12).map((h, idx) => ({
-            id: idx + 1,
-            sign: h.sign || getSignFromLongitude(h.longitude || 0),
-            area: houseAreas[idx] || 'Unknown',
-            longitude: h.longitude || 0
-          }));
+          // Overwrite H10 with real MC if available
+          const mcHouse = rawHouses.find(h => h.name === 'MC');
+          if (mcHouse) {
+            processedHouses[9] = {
+              ...processedHouses[9],
+              sign:      mcHouse.sign,
+              longitude: mcHouse.longitude,
+            };
+          }
         }
         setHouses(processedHouses);
 
-        const ascendantSign = data?.ascendant || rawData?.ascendant?.sign || 'Unknown';
-        const ascendantDegree = rawData?.ascendant?.degree || (processedHouses[0]?.longitude || 0);
-        setAscendantData({ sign: ascendantSign, degree: ascendantDegree });
-        
-        const mcSign = processedHouses[9]?.sign || 'Unknown';
-        const mcLongitude = processedHouses[9]?.longitude || 0;
-        
+        // ── Ascendant ─────────────────────────────────────────────────────────
+        const asc = data.ascendant ?? {};
+        const ascSign   = asc.sign      ?? processedHouses[0]?.sign ?? 'Unknown';
+        const ascDeg    = asc.longitude ?? processedHouses[0]?.longitude ?? 0;
+        setAscendantData({ sign: ascSign, degree: ascDeg });
+
+        // ── MC / Points ───────────────────────────────────────────────────────
+        const mcData    = rawHouses.find(h => h.name === 'MC') ?? processedHouses[9];
+        const mcSign    = mcData?.sign      ?? 'Unknown';
+        const mcLng     = mcData?.longitude ?? 0;
+
         setPoints([
-          { name: "Ascendant (ASC)", sign: ascendantSign, deg: `${Math.floor(ascendantDegree % 30)}°`, icon: <ArrowUpRight size={16} />, desc: "The Persona", path: `/ascendant/${ascendantSign}` },
-          { name: "Midheaven (MC)", sign: mcSign, deg: `${Math.floor(mcLongitude % 30)}°`, icon: <Crown size={16} />, desc: "Public Image", path: `/MC/${mcSign}` }
+          {
+            name: 'Ascendant (ASC)', sign: ascSign,
+            deg:  `${Math.floor(ascDeg % 30)}°`,
+            icon: <ArrowUpRight size={16} />,
+            desc: 'The Persona',
+            path: `/ascendant/${ascSign}`,
+          },
+          {
+            name: 'Midheaven (MC)', sign: mcSign,
+            deg:  `${Math.floor(mcLng % 30)}°`,
+            icon: <Crown size={16} />,
+            desc: 'Public Image',
+            path: `/MC/${mcSign}`,
+          },
         ]);
+
       } catch (err) {
-        console.error('Fetch Error:', err);
+        console.error('Natal chart fetch error:', err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchNatalChart();
   }, [user]);
 
-  // Background Star Animation
+  // ── Star canvas animation ─────────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -139,18 +193,18 @@ const Natal = () => {
     class Star {
       constructor() { this.reset(); }
       reset() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 2;
+        this.x       = Math.random() * canvas.width;
+        this.y       = Math.random() * canvas.height;
+        this.size    = Math.random() * 2;
         this.opacity = Math.random();
-        this.speed = Math.random() * 0.01 + 0.002;
+        this.speed   = Math.random() * 0.01 + 0.002;
       }
       update() {
         this.opacity += this.speed;
         if (this.opacity > 1 || this.opacity < 0.1) this.speed = -this.speed;
       }
       draw() {
-        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
@@ -158,14 +212,14 @@ const Natal = () => {
     }
 
     const resize = () => {
-      canvas.width = window.innerWidth;
+      canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
-      stars = Array.from({ length: (canvas.width * canvas.height) / 8000 }, () => new Star());
+      stars = Array.from({ length: Math.floor((canvas.width * canvas.height) / 8000) }, () => new Star());
     };
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      stars.forEach(star => { star.update(); star.draw(); });
+      stars.forEach(s => { s.update(); s.draw(); });
       animationFrameId = requestAnimationFrame(animate);
     };
 
@@ -178,6 +232,7 @@ const Natal = () => {
     };
   }, []);
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#050505] text-[#f5f5f5] relative overflow-x-hidden">
       <canvas ref={canvasRef} className="fixed top-0 left-0 z-0 pointer-events-none" />
@@ -189,11 +244,15 @@ const Natal = () => {
             {loading ? 'Loading...' : 'Natal Architecture'}
           </h1>
           <p className="text-white/40 tracking-[0.3em] uppercase text-xs">A Blueprint of the Soul</p>
-          <Link to="/astrocartography" className="inline-flex items-center gap-2 mt-8 px-6 py-3 bg-cosmic-primary/20 hover:bg-cosmic-primary/40 border border-cosmic-primary/50 rounded-lg text-cosmic-primary hover:text-white transition-all">
+          <Link
+            to="/astrocartography"
+            className="inline-flex items-center gap-2 mt-8 px-6 py-3 bg-cosmic-primary/20 hover:bg-cosmic-primary/40 border border-cosmic-primary/50 rounded-lg text-cosmic-primary hover:text-white transition-all"
+          >
             <MapPin size={18} /> View Astrocartography Map
           </Link>
         </div>
 
+        {/* Chart Wheel */}
         <div className="mb-16 flex justify-center">
           {!loading && (
             <div className="w-full max-w-4xl">
@@ -218,8 +277,8 @@ const Natal = () => {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {planets.map((p) => (
-                    <tr 
-                      key={p.name} 
+                    <tr
+                      key={p.name}
                       onClick={() => navigate(`/${p.name.toLowerCase()}/${p.sign}`)}
                       className="hover:bg-white/5 transition-all cursor-pointer group"
                     >
@@ -237,7 +296,7 @@ const Natal = () => {
             </div>
           </section>
 
-          {/* Houses List */}
+          {/* Houses */}
           <section className="lg:col-span-4 bg-white/3 backdrop-blur-md border border-cosmic-primary/20 rounded-4xl p-8">
             <h3 className="text-cosmic-primary text-[10px] font-bold uppercase tracking-[0.25em] mb-8">The 12 Houses</h3>
             <div className="space-y-1">
@@ -254,7 +313,7 @@ const Natal = () => {
           </section>
         </div>
 
-        {/* Points Table */}
+        {/* Points */}
         <section className="bg-white/3 backdrop-blur-md border border-cosmic-primary/20 rounded-4xl p-8">
           <h3 className="text-cosmic-primary text-[10px] font-bold uppercase tracking-[0.25em] mb-8">Celestial Thresholds</h3>
           <div className="overflow-x-auto">
@@ -269,8 +328,8 @@ const Natal = () => {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {points.map((p) => (
-                  <tr 
-                    key={p.name} 
+                  <tr
+                    key={p.name}
                     onClick={() => navigate(p.path)}
                     className="hover:bg-white/5 transition-all cursor-pointer group"
                   >

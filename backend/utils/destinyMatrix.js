@@ -134,6 +134,24 @@ function computeMatrixNumbers({ year, month, date, name }) {
   };
 }
 
+function describeCoreNumber(num) {
+  const map = {
+    1: '1 — The Pioneer. Initiative, willpower, independence, and the drive to lead from the front.',
+    2: '2 — The Diplomat. Sensitivity, intuition, partnership, and the gift of emotional attunement.',
+    3: '3 — The Creator. Communication, artistry, playfulness, and the urge to express from the heart.',
+    4: '4 — The Architect. Stability, structure, discipline, and the ability to build what lasts.',
+    5: '5 — The Traveler. Freedom, change, curiosity, and the alchemy of new experiences.',
+    6: '6 — The Guardian. Responsibility, devotion, healing, and sacred service to loved ones.',
+    7: '7 — The Mystic. Analysis, introspection, spiritual wisdom, and a need for solitude.',
+    8: '8 — The Power Alchemist. Ambition, manifestation, material mastery, and executive presence.',
+    9: '9 — The Old Soul. Compassion, completion, release, and global humanitarian vision.',
+    11: '11 — The Visionary Master. Illumination, inspiration, psychic sensitivity, and spiritual leadership.',
+    22: '22 — The Master Builder. Turning bold spiritual visions into concrete structures that uplift many.',
+    33: '33 — The Master Healer. Embodied compassion, teaching, and radiating unconditional love in action.'
+  };
+  return map[num] || null;
+}
+
 function calculateDestinyMatrix({ name, birthDateISO }) {
   const d = new Date(birthDateISO);
   const payload = {
@@ -151,6 +169,17 @@ function calculateDestinyMatrix({ name, birthDateISO }) {
   // Calculate all matrix numbers
   const matrixNumbers = computeMatrixNumbers({ ...payload, name });
 
+  // High‑level archetypal descriptions for the key numbers
+  const lifePathMeaning = lifePath ? describeCoreNumber(lifePath) : null;
+  const expressionMeaning = expression ? describeCoreNumber(expression) : null;
+  const soulUrgeMeaning = soulUrge ? describeCoreNumber(soulUrge) : null;
+  const personalityMeaning = personality ? describeCoreNumber(personality) : null;
+  const birthdayMeaning = birthday ? describeCoreNumber(birthday) : null;
+
+  // The central “pivot” of the matrix – what the UI draws in the center circle.
+  const centerNumber = lifePath;
+  const centerMeaning = lifePathMeaning;
+
   return {
     lifePathNumber: lifePath,
     expressionNumber: expression,
@@ -159,7 +188,14 @@ function calculateDestinyMatrix({ name, birthDateISO }) {
     birthdayNumber: birthday,
     gridCounts: grid,
     inputs: payload,
-    matrixNumbers: matrixNumbers
+    matrixNumbers,
+    lifePathMeaning,
+    expressionMeaning,
+    soulUrgeMeaning,
+    personalityMeaning,
+    birthdayMeaning,
+    centerNumber,
+    centerMeaning
   };
 }
 

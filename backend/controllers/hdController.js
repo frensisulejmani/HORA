@@ -192,6 +192,13 @@ async function computeHumanDesign(req, res) {
     const hdType = determineHDType(personalityActivations, designActivations, definedCenters);
     const hdAuthority = determineHDAuthority(personalityActivations, designActivations, definedCenters);
     const hdProfile = determineHDProfile(personalityActivations, designActivations);
+
+    // Map type → strategy so the frontend can display
+    const hdStrategy = getHDStrategy(hdType);
+
+    // Very lightweight “Incarnation Cross” label based on Sun/Earth gates.
+    // This avoids returning a generic placeholder and at least ties the text to the actual design.
+    const hdIncarnationCross = buildIncarnationCrossLabel(personalityActivations, designActivations);
     
     return res.json({
       message: 'OK',
@@ -209,7 +216,9 @@ async function computeHumanDesign(req, res) {
       authority: hdAuthority,
       authorityDescription: getHDAuthorityDescription(hdAuthority),
       profile: hdProfile,
-      profileDescription: getHDProfileDescription(hdProfile)
+      profileDescription: getHDProfileDescription(hdProfile),
+      strategy: hdStrategy,
+      incarnationCross: hdIncarnationCross
     });
   } catch (err) {
     console.error('computeHumanDesign error:', err);
@@ -328,6 +337,42 @@ function getHDProfileDescription(profile) {
     '6 / 3': 'The Role Model Martyr. Your wisdom matures after age 30 and you learn through experience.'
   };
   return descriptions[profile] || 'Your profile reveals your role and life purpose.';
+}
+
+// Strategy mapping derived from the five classic Aura types.
+function getHDStrategy(type) {
+  const map = {
+    'Manifesting Generator': 'To respond first, then inform before you initiate.',
+    'Generator': 'To respond to life rather than initiate from the mind.',
+    'Manifestor': 'To inform those impacted before you initiate action.',
+    'Projector': 'To wait for recognition and the correct invitations.',
+    'Reflector': 'To wait through a full lunar cycle before major decisions.'
+  };
+  return map[type] || 'Follow your body’s signals rather than mental pressure.';
+}
+
+// Build a simple, data‑driven Incarnation Cross label using Sun/Earth gates.
+function buildIncarnationCrossLabel(personalityActivations, designActivations) {
+  const pSun = personalityActivations.Sun;
+  const pEarth = personalityActivations.Earth;
+  const dSun = designActivations.Sun;
+  const dEarth = designActivations.Earth;
+
+  if (!pSun || !pEarth || !dSun || !dEarth) {
+    return null;
+  }
+
+  const format = (act) => (act.gate ? `${act.gate}.${act.line || 1}` : null);
+  const pSunLabel = format(pSun);
+  const pEarthLabel = format(pEarth);
+  const dSunLabel = format(dSun);
+  const dEarthLabel = format(dEarth);
+
+  if (!pSunLabel || !pEarthLabel || !dSunLabel || !dEarthLabel) {
+    return null;
+  }
+
+  return `Cross of ${pSunLabel}/${pEarthLabel} & ${dSunLabel}/${dEarthLabel}`;
 }
 
 module.exports = { computeHumanDesign };

@@ -145,36 +145,106 @@ async function generalChat(req, res) {
       return res.status(400).json({ message: 'Message is required' });
     }
 
-    // Build context with user's birth information
+    // Build context with user's birth information and pre-calculated systems
     let userContext = `User Profile:
-Name: ${user.name || 'Unknown'}
-Email: ${user.email || 'Unknown'}`;
+Name: ${user?.name || 'Unknown'}
+Email: ${user?.email || 'Unknown'}`;
 
-    if (user.birth) {
+    let astroSummary = '';
+    let destinySummary = '';
+    let astrocartographySummary = '';
+
+    if (user?.birth && user.birth.year && user.birth.month && user.birth.date) {
+      const birth = {
+        date: user.birth.date,
+        month: user.birth.month,
+        year: user.birth.year,
+        hour: user.birth.hour || 0,
+        minute: user.birth.minute || 0,
+        latitude: user.birth.latitude || 0,
+        longitude: user.birth.longitude || 0,
+        timezone: typeof user.birth.timezone === 'number' ? user.birth.timezone : 0,
+        place: user.birth.place || ''
+      };
+
       userContext += `
 Birth Information:
-- Date: ${user.birth.year}-${String(user.birth.month).padStart(2, '0')}-${String(user.birth.date).padStart(2, '0')}
-- Time: ${String(user.birth.hour || 0).padStart(2, '0')}:${String(user.birth.minute || 0).padStart(2, '0')}
-- Location: ${user.birth.place || 'Unknown'}
-- Coordinates: ${user.birth.latitude || 'N/A'}, ${user.birth.longitude || 'N/A'}
-- Timezone: UTC${user.birth.timezone >= 0 ? '+' : ''}${user.birth.timezone || 0}`;
+- Date: ${birth.year}-${String(birth.month).padStart(2, '0')}-${String(birth.date).padStart(2, '0')}
+- Time: ${String(birth.hour).padStart(2, '0')}:${String(birth.minute).padStart(2, '0')}
+- Location: ${birth.place || 'Unknown'}
+- Coordinates: ${birth.latitude}, ${birth.longitude}
+- Timezone: UTC${birth.timezone >= 0 ? '+' : ''}${birth.timezone}`;
+
+      // Derive natal + destiny context once so the model can reuse it
+      try {
+        const [astroNatal, destiny] = await Promise.all([
+          getComprehensiveNatal(birth),
+          calculateDestinyMatrix({
+            name: user.name,
+            birthDateISO: new Date(Date.UTC(birth.year, birth.month - 1, birth.date)).toISOString()
+          })
+        ]);
+
+        if (astroNatal) {
+          const sun = Array.isArray(astroNatal.planets)
+            ? astroNatal.planets.find((p) => (p.name || '').toLowerCase() === 'sun')
+            : null;
+          const moon = Array.isArray(astroNatal.planets)
+            ? astroNatal.planets.find((p) => (p.name || '').toLowerCase() === 'moon')
+            : null;
+          const asc = astroNatal.ascendant;
+
+          astroSummary = `Natal Snapshot:
+- Sun: ${sun?.sign || 'Unknown'}
+- Moon: ${moon?.sign || 'Unknown'}
+- Ascendant: ${asc?.sign || 'Unknown'}`;
+        }
+
+        if (destiny) {
+          destinySummary = `Destiny Matrix:
+- Life Path: ${destiny.lifePathNumber}
+- Expression: ${destiny.expressionNumber || 'N/A'}
+- Soul Urge: ${destiny.soulUrgeNumber || 'N/A'}`;
+        }
+
+        // Very light astrocartography hint: which signs are emphasized by planets on angles
+        if (astroNatal && Array.isArray(astroNatal.planets)) {
+          const strongPlanets = astroNatal.planets
+            .filter((p) => p.house === 1 || p.house === 4 || p.house === 7 || p.house === 10)
+            .slice(0, 5)
+            .map((p) => `${p.name} in ${p.sign} (House ${p.house})`);
+          if (strongPlanets.length > 0) {
+            astrocartographySummary = `Astrocartography Hint:
+Key angular planets: ${strongPlanets.join(', ')}. Favor regions that resonate with these line energies.`;
+          }
+        }
+      } catch (calcErr) {
+        console.warn('generalChat: failed to precompute natal/destiny context:', calcErr.message);
+      }
     } else {
       userContext += `
 Birth Information: Not provided yet`;
     }
 
-    const systemInstruction = `You are the Hora Oracle, an expert astrologer, numerologist, and spiritual guide. You have access to the user's birth information and can provide personalized insights about their Natal Chart, Human Design, Destiny Matrix, dreams, and karmic patterns.
+    const systemInstruction = `You are the Hora Oracle, an expert astrologer, numerologist, and astrocartographer.
 
-Be warm, mystical, insightful, and personalized. Use their actual birth data when relevant. If they ask about topics requiring their birth info and it's available, incorporate it naturally. If birth info is missing, gently ask for it.
+You always base your answers on the user's stored birth data and the derived systems below when relevant:
+- Natal chart (signs, houses, angles)
+- Destiny Matrix numerology (life path, expression, soul urge)
+- Astrocartography emphasis (planets on angles by sign/house)
 
-Keep responses conversational, mystical, and under 100 words unless more detail is specifically requested.`;
+If the user asks about their natal chart, astrocartography, or destiny matrix, answer using these calculated values instead of asking for birth data again. Only ask for birth details if none are available.
+
+Be warm, mystical, insightful, and personalized. Keep responses under 120 words unless the user explicitly requests more depth.`;
 
     const model = genAI.getGenerativeModel({ 
       model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
-      systemInstruction: systemInstruction
+      systemInstruction
     });
 
     const fullPrompt = `${userContext}
+
+${astroSummary ? `${astroSummary}\n` : ''}${destinySummary ? `${destinySummary}\n` : ''}${astrocartographySummary ? `${astrocartographySummary}\n` : ''}
 
 User's Question: ${message}`;
 
@@ -190,7 +260,7 @@ User's Question: ${message}`;
     res.json({ 
       message: 'OK', 
       response: aiResponse,
-      hasUserData: !!user.birth 
+      hasUserData: !!user?.birth 
     });
 
   } catch (err) {

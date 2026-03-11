@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Hora",
+    "slug": "hora",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./frontend/src/assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#050505"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#050505"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiBaseUrl": "http://localhost:5000",
+      "eas": {
+        "projectId": "9fbdbffe-8222-412b-85c2-008a4ba008b5"
+      }
+    },
+    "owner": "junas-organization",
+    "plugins": [
+      "expo-asset"
+    ]
+  }
+}

@@ -24,10 +24,21 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const url = error.config?.url || '';
+
+    // For normal authenticated calls, a 401 should log the user out.
+    // But for login/register endpoints we want to show the error message
+    // instead of instantly refreshing the page.
+    const isAuthAttempt =
+      url.includes('/api/users/login') || url.includes('/api/users/register');
+
+    if (status === 401 && !isAuthAttempt) {
       localStorage.removeItem('auth_token');
       window.location.href = '/login';
+      return Promise.reject(error);
     }
+
     return Promise.reject(error);
   }
 );

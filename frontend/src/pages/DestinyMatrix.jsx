@@ -106,9 +106,30 @@ const DestinyMatrix = () => {
             </div>
             
             <div className="pt-6 space-y-4">
-              <InfoCard icon={<Zap size={18}/>} title="Personal Portrait" desc="The central pivot of your matrix. This number represents your comfort zone and where your soul recharges." />
-              <InfoCard icon={<Briefcase size={18}/>} title="Material Flow" desc="The right-hand line of the matrix dictates how abundance flows into your reality based on your lineage." />
-              <InfoCard icon={<Heart size={18}/>} title="Karmic Lessons" desc="The bottom nodes highlight the love and relationship patterns you are here to master." />
+              <InfoCard
+                icon={<Zap size={18} />}
+                title="Personal Portrait"
+                desc={
+                  matrixData?.centerMeaning ||
+                  'The central pivot of your matrix. This number represents your comfort zone and where your soul recharges.'
+                }
+              />
+              <InfoCard
+                icon={<Briefcase size={18} />}
+                title="Material Flow"
+                desc={
+                  matrixData?.expressionMeaning ||
+                  'The right-hand line of the matrix dictates how abundance flows into your reality based on your lineage.'
+                }
+              />
+              <InfoCard
+                icon={<Heart size={18} />}
+                title="Karmic Lessons"
+                desc={
+                  matrixData?.soulUrgeMeaning ||
+                  'The bottom nodes highlight the love and relationship patterns you are here to master.'
+                }
+              />
             </div>
           </div>
         </div>
