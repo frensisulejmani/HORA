@@ -44,7 +44,7 @@ app.use((req, res, next) => {
 });
 
 // Database connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://frensi009_db_user:LZajzt8REj1uQi39@cluster0.3dyd6g8.mongodb.net/';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://frensi009_db_user:password@cluster0.3dyd6g8.mongodb.net/';
 mongoose.connect(MONGODB_URI)
 .then(() => console.log('MongoDB connected successfully'))
 .catch((err) => console.error('MongoDB connection error:', err));
